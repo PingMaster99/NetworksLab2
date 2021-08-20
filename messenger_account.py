@@ -155,6 +155,29 @@ class MessengerAccount(ClientXMPP):
 
             elif option == 12344321:
                 print("Я Коло-бот")
+            elif option == 11: 
+                
+                
+                """
+                read txt file with network topology
+                """
+                fil = open("topology.txt","r")
+
+                #---------------------------------------
+                """
+                send message
+                """
+                
+                print("hello world")
+                try:
+                    username = await ainput("Username to send message to\n>> ")
+                    message_destinatary = f"{username}@alumchat.xyz"
+                    message = await ainput("Message content\n>> ")
+                    await self.message(message_destinatary, message, mtype='chat')
+                    print(f"Sent: {message} > {username}")
+                except AttributeError:
+                    print("El usuario no es correcto")
+                continue
         
             else:
                 print("Invalid option")
