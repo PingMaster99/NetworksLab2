@@ -14,7 +14,7 @@ class TopologyReader:
                     continue
 
                 try:
-                    content = [int(i) for i in line.split()]
+                    content = [float(i) for i in line.split()]
                     if len(content) == 1:
                         self.node_quantity = content[0]
                         continue
