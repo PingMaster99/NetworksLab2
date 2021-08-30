@@ -1,9 +1,10 @@
 class NetworkAlgorithms:
     def __init__(self):
         self.shortest_path = []
+        self.current_path = []
         print("Initializing")
 
-    def minDistance(self, dist, queue):
+    def min_distance(self, dist, queue):
         # Initialize min value and min_index as -1
         minimum = float("Inf")
         min_index = -1
@@ -24,44 +25,32 @@ class NetworkAlgorithms:
     Reference: https://www.geeksforgeeks.org/printing-paths-dijkstras-shortest-path-algorithm/
     '''
 
-    def dijkstra(self, graph, src):
+    def link_state_routing(self, graph, destination, src=0):
         self.shortest_path.clear()
         row = len(graph)
 
-        # The output array. dist[i] will hold
-        # the shortest distance from src to i
-        # Initialize all distances as INFINITE
+        # All distances start with infinite value
         dist = [float("Inf")] * row
 
-        # Parent array to store
-        # shortest path tree
+        # Shortest path parent nodes
         parent = [-1] * row
 
-        # Distance of source vertex
-        # from itself is always 0
+        # Distance from initial vertex
         dist[src] = 0
 
         # Add all vertices in queue
-        queue = []
-        for i in range(row):
-            queue.append(i)
+        queue = [i for i in range(row)]
 
         # Find shortest path for all vertices
         while queue:
 
-            # Pick the minimum dist vertex
-            # from the set of vertices
-            # still in queue
-            u = self.minDistance(dist, queue)
+            # Pick the minimum dist vertex from vertices that are still in the queue
+            u = self.min_distance(dist, queue)
 
             # remove min element
             queue.remove(u)
 
-            # Update dist value and parent
-            # index of the adjacent vertices of
-            # the picked vertex. Consider only
-            # those vertices which are still in
-            # queue
+            # Update distance and parent index of the picked vertex of those in the queue.
             for i in range(row):
                 '''Update dist[i] only if it is in queue, there is
                 an edge from u to i, and total weight of path from
@@ -72,35 +61,42 @@ class NetworkAlgorithms:
                         dist[i] = dist[u] + graph[u][i]
                         parent[i] = u
 
-        # print the constructed distance array
-        self.printSolution(dist, parent)
+        # populate the shortest distance path
+        self.get_distance_path(dist, parent, destination)
+        return self.shortest_path
 
-    # Function to print shortest path
-    # from source to j
-    # using parent array
-    def printPath(self, parent, j):
+    # Populates the shortest distance path array
+    def get_path(self, parent, j):
 
         # Base Case : If j is source
         if parent[j] == -1:
-            self.shortest_path.append(j)
+            self.current_path.append(j)
             print(j)
             return
-        self.printPath(parent, parent[j])
-        self.shortest_path.append(j)
+        self.get_path(parent, parent[j])
+        self.current_path.append(j)
         print(j)
 
     # A utility function to print
     # the constructed distance
     # array
-    def printSolution(self, dist, parent):
+    def get_distance_path(self, dist, parent, destination):
         src = 0
         print("Vertex \t\tDistance from Source\tPath")
         for i in range(1, len(dist)):
             print("\n%d --> %d \t\t%d \t\t\t\t\t" % (src, i, dist[i])),
-            self.printPath(parent, i)
+            self.get_path(parent, i)
+            self.shortest_path.append(self.current_path.copy())
+            self.current_path.clear()
+
+
+
+    def distance_vector(self):
+        print()
 
 
 my_matrix = [[1, 2, 88], [float('inf'), 1, 2], [3, 5, 2]]
 tf = NetworkAlgorithms()
-tf.dijkstra(my_matrix, 0)
+d = tf.link_state_routing(my_matrix, 0)
+print(d)
 
