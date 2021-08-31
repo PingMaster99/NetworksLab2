@@ -62,8 +62,8 @@ class NetworkAlgorithms:
                         parent[i] = u
 
         # populate the shortest distance path
-        self.get_distance_path(dist, parent, destination)
-        return self.shortest_path
+        self.get_distance_path(dist, parent)
+        return self.shortest_path[destination], dist[destination]
 
     # Populates the shortest distance path array
     def get_path(self, parent, j):
@@ -80,7 +80,7 @@ class NetworkAlgorithms:
     # A utility function to print
     # the constructed distance
     # array
-    def get_distance_path(self, dist, parent, destination):
+    def get_distance_path(self, dist, parent):
         src = 0
         print("Vertex \t\tDistance from Source\tPath")
         for i in range(1, len(dist)):

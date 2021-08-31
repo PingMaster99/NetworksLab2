@@ -9,10 +9,14 @@
     Base reference for slixmpp implementations: https://lab.louiz.org/poezio/slixmpp/-/tree/master/examples
 """
 
+import ast
 import asyncio
 import constants
 from aioconsole import ainput
 from slixmpp import ClientXMPP, exceptions
+from topology_reader import TopologyReader
+from routing_algorithms import NetworkAlgorithms
+
 asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
@@ -43,15 +47,44 @@ class MessengerAccount(ClientXMPP):
         self.received = set()
         self.presences_received = asyncio.Event()
 
-    @staticmethod
-    def get_notification(event):
+        topology_reader = TopologyReader()
+        self.nodes = topology_reader.nodes
+        self.matrix = topology_reader.adjacency_matrix
+        self.node_number = self.nodes.index(self.jid)
+        self.adjacent_nodes = self.matrix[self.node_number]
+
+        self.routing_algorithm = NetworkAlgorithms()
+
+    def get_notification(self, event):
         """
         Prints a notification according to the event received
         :param event: event received
         """
         print(event['type'])
         if event['type'] in ('chat', 'normal'):
-            print(f"New message from {event['from'].username}: {event['body']}")
+            message_data = event['body'].split('/$/')
+            # 1 sender jid \ 3 Destinatary jid \ 5 visited nodes(convert to list) \ 7 distance
+            # \ 9 path (convert to list) \ 11 nodes \ 13 message
+
+            if message_data[0] == self.jid:
+                print(f"Message received from {message_data[1]}: {message_data[13]}")
+            else:
+                print(f"Message in transit received")
+                message_data[5] = ast.literal_eval(message_data[5])     # visited_nodes
+                message_data[9] = ast.literal_eval(message_data[9])     # path
+                message_destinatary_index = message_data[9].pop(0)
+                message_data[5].append(message_destinatary_index)
+                message_destinatary = self.nodes[message_destinatary_index]
+
+                message_data[5] = str(message_data[5])
+                message_data[9] = str(message_data[9])
+
+                message = '/$/'.join(message_data)
+
+                self.send_message(message_destinatary, message, mtype='chat')
+
+                print(f"Forwarding message to node {message_destinatary}")
+
         elif event['type'] == 'groupchat':
             print(f"New message from group {event['from']}: {event['body']}")
         elif event['type'] == 'headline':
@@ -124,7 +157,26 @@ class MessengerAccount(ClientXMPP):
                     username = await ainput("Username to send message to\n>> ")
                     message_destinatary = f"{username}@alumchat.xyz"
                     message = await ainput("Message content\n>> ")
-                    await self.message(message_destinatary, message, mtype='chat')
+                    algorithm = await ainput("Algorithm: \n1. Flooding\n2. Distance vector routing\n3. Link state "
+                                             "routing")
+                    path = None
+                    if algorithm == '1':
+                        pass
+                    elif algorithm == '2':
+                        pass
+                    elif algorithm == '3':
+                        path, distance = self.routing_algorithm.link_state_routing(self.matrix, self.nodes.index(message_destinatary), self.node_number)
+                        message = f"Sender/$/{self.jid}/$/Destinatary/$/{message_destinatary}" \
+                                  f"/$/Traversed nodes/$/{[path[0], path[1]]}/$/Distance/$/{distance}/$/Path/$/" \
+                                  f"{path[2::]}/$/Nodes/$/{self.nodes}/$/Message/$/{message} "
+
+                    else:
+                        print("Algorithm wasn't correct")
+                        continue
+                    if path is not None and len(path) > 1:
+                        await self.message(self.nodes[path[1]], message, mtype='chat')
+                    else:
+                        await self.message(message_destinatary, message, mtype='chat')
                     print(f"Sent: {message} > {username}")
                 except AttributeError:
                     print("El usuario no es correcto")
@@ -308,3 +360,14 @@ class MessengerAccount(ClientXMPP):
         print("Message sent")
         message['oob']['url'] = url
         message.send()
+
+
+my_list = "[1, 'mycar', 3, 4, 5, 6]"
+my_list = ast.literal_eval(my_list)
+my_list = [str(number) for number in my_list]
+my_list = my_list[0::]
+my_list.append(str([2,3]))
+my_list = '/$/'.join(my_list)
+
+print(my_list, "This is the list")
+
