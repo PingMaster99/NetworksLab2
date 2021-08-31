@@ -37,6 +37,7 @@ class NetworkAlgorithms:
 
         # Distance from initial vertex
         dist[src] = 0
+        self.shortest_path.append([src])
 
         # Add all vertices in queue
         queue = [i for i in range(row)]
@@ -62,7 +63,7 @@ class NetworkAlgorithms:
                         parent[i] = u
 
         # populate the shortest distance path
-        self.get_distance_path(dist, parent)
+        self.get_distance_path(dist, parent, src)
         return self.shortest_path[destination], dist[destination]
 
     # Populates the shortest distance path array
@@ -80,8 +81,8 @@ class NetworkAlgorithms:
     # A utility function to print
     # the constructed distance
     # array
-    def get_distance_path(self, dist, parent):
-        src = 0
+    def get_distance_path(self, dist, parent, src=0):
+        src = src
         print("Vertex \t\tDistance from Source\tPath")
         for i in range(1, len(dist)):
             print("\n%d --> %d \t\t%d \t\t\t\t\t" % (src, i, dist[i])),
@@ -95,8 +96,8 @@ class NetworkAlgorithms:
         print()
 
 
-my_matrix = [[1, 2, 88], [float('inf'), 1, 2], [3, 5, 2]]
+my_matrix = [[0, 2, 88], [float('inf'), 1, 2], [3, 5, 2]]
 tf = NetworkAlgorithms()
-d = tf.link_state_routing(my_matrix, 0)
+d = tf.link_state_routing(my_matrix, 2)
 print(d)
 
