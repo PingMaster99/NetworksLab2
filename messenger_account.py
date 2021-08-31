@@ -160,11 +160,11 @@ class MessengerAccount(ClientXMPP):
                     algorithm = await ainput("Algorithm: \n1. Flooding\n2. Distance vector routing\n3. Link state "
                                              "routing")
                     path = None
-                    if algorithm == '1':
+                    if algorithm == '1':    # Flooding
                         pass
-                    elif algorithm == '2':
+                    elif algorithm == '2':  # Distance vector routing
                         pass
-                    elif algorithm == '3':
+                    elif algorithm == '3':  # Link state routing
                         path, distance = self.routing_algorithm.link_state_routing(self.matrix, self.nodes.index(message_destinatary), self.node_number)
                         message = f"Sender/$/{self.jid}/$/Destinatary/$/{message_destinatary}" \
                                   f"/$/Traversed nodes/$/{[path[0], path[1]]}/$/Distance/$/{distance}/$/Path/$/" \
