@@ -51,7 +51,23 @@ class MessengerAccount(ClientXMPP):
         self.nodes = topology_reader.nodes
         self.matrix = topology_reader.adjacency_matrix
         self.node_number = self.nodes.index(self.jid)
-        self.adjacent_nodes = self.matrix[self.node_number]
+        self.adjacent_node_weights = self.matrix[self.node_number]
+        self.adjacent_names = []
+        self.dvr_matrix = []
+
+        for i in range(len(self.nodes)):
+            self.dvr_matrix.append([0] * len(self.nodes))
+
+        self.dvr_matrix[self.node_number] = self.adjacent_node_weights
+
+        node_index = 0
+        for node in self.adjacent_node_weights:
+            if node < float('inf') and node != 0:
+                self.adjacent_names.append(self.nodes[node_index])
+                node_index += 1
+
+        print()
+
 
         self.routing_algorithm = NetworkAlgorithms()
 
@@ -64,11 +80,36 @@ class MessengerAccount(ClientXMPP):
         if event['type'] in ('chat', 'normal'):
             message_data = event['body'].split('/$/')
             # 1 sender jid \ 3 Destinatary jid \ 5 visited nodes(convert to list) \ 7 distance
-            # \ 9 path (convert to list) \ 11 nodes \ 13 message
+            # \ 9 path (convert to list) \ 11 nodes \ 13 message \ 14 algorithm
 
-            if message_data[0] == self.jid:
+            if message_data[3] == self.jid:
                 print(f"Message received from {message_data[1]}: {message_data[13]}")
-            else:
+
+            elif message_data[14] == 1:     # DVR
+                pass
+
+
+            elif message_data[14] == 2:     # Flooding
+                message_data[5] = ast.literal_eval(message_data[5]) # visited nodes
+                message_data[9] = ast.literal_eval(message_data[9])  # path
+                not_sent_to = [x for x in self.adjacent_names not in message_data[5]]
+
+                if len(not_sent_to) > 0 and message_data[3] in message_data[9]:
+                    message_data[9] = [x for x in message_data[9] not in self.adjacent_names]
+                    message_data[9] = str(message_data[9])
+
+                    for node in not_sent_to:
+                        message_data[5].append(node)
+                    message_data[5] = str(message_data[5])
+                    message = '/$/'.join(message_data)
+
+                    for node in not_sent_to:
+                        self.send_message(node, message, mtype='chat')
+                        print(f"Flooding message to {node}")
+
+                message_data[9] = ast.literal_eval(message_data[9])
+
+            elif message_data[14] == 3: # link state routing
                 print(f"Message in transit received")
                 message_data[5] = ast.literal_eval(message_data[5])     # visited_nodes
                 message_data[9] = ast.literal_eval(message_data[9])     # path
@@ -140,22 +181,10 @@ class MessengerAccount(ClientXMPP):
                 await self.disconnect()
                 break
 
-            elif option == 2:   # Delete account
-                await self.delete_account()
-                break
-
-            elif option == 3:     # Show contacts
-                await self.show_users_and_contacts()
-                continue
-
-            elif option == 4:     # Add contact
-                await self.add_user_to_contacts()
-                continue
-
-            elif option == 5:     # Send a message
+            elif option == 2:     # Send a message
                 try:
                     username = await ainput("Username to send message to\n>> ")
-                    message_destinatary = f"{username}@alumchat.xyz"
+                    message_destinatary = f"{username}{constants.SERVER}"
                     message = await ainput("Message content\n>> ")
                     algorithm = await ainput("Algorithm: \n1. Flooding\n2. Distance vector routing\n3. Link state "
                                              "routing")
@@ -163,13 +192,26 @@ class MessengerAccount(ClientXMPP):
                     if algorithm == '1':    # Flooding
                         pass
                     elif algorithm == '2':  # Distance vector routing
-                        pass
+                        print(self.matrix, self.node_number, message_destinatary)
+                        routing = NetworkAlgorithms()
+                        routing.say_hi(self.matrix, self.nodes.index(message_destinatary), self.node_number)
+                        path, distance = routing.link_state_routing(self.matrix, self.nodes.index(message_destinatary), self.node_number)
+                        message = f"Sender/$/{self.jid}/$/Destinatary/$/{message_destinatary}" \
+                                  f"/$/Traversed nodes/$/{self.adjacent_names}/$/Distance/$/N.A/$/Path/$/" \
+                                  f"{[x for x in self.nodes if x not in self.adjacent_names]}/$/Nodes/$/{self.nodes}/$/Message/$/{message}/$/2"
+
+                        for i in range(len(self.adjacent_names)):
+                            await self.message(self.adjacent_names[i], message, mtype='chat')
+
                     elif algorithm == '3':  # Link state routing
-                        path, distance = self.routing_algorithm.link_state_routing(self.matrix, self.nodes.index(message_destinatary), self.node_number)
+                        print(self.matrix, self.node_number, message_destinatary)
+                        routing = NetworkAlgorithms()
+                        routing.say_hi(self.matrix, self.nodes.index(message_destinatary), self.node_number)
+                        path, distance = routing.link_state_routing(self.matrix, self.nodes.index(message_destinatary), self.node_number)
                         message = f"Sender/$/{self.jid}/$/Destinatary/$/{message_destinatary}" \
                                   f"/$/Traversed nodes/$/{[path[0], path[1]]}/$/Distance/$/{distance}/$/Path/$/" \
-                                  f"{path[2::]}/$/Nodes/$/{self.nodes}/$/Message/$/{message} "
-
+                                  f"{path[2::]}/$/Nodes/$/{self.nodes}/$/Message/$/{message}/$/3 "
+                        print(f"Shortest path is: {path} with a total weight of {distance}")
                     else:
                         print("Algorithm wasn't correct")
                         continue
@@ -181,58 +223,13 @@ class MessengerAccount(ClientXMPP):
                 except AttributeError:
                     print("El usuario no es correcto")
                 continue
-            elif option == 6:     # Group message
-                room_name = str(await ainput("Introduce the room name:\n>> "))
-                room_name = f"{room_name}@conference.alumchat.xyz"
-                self.plugin['xep_0045'].join_muc(room_name, self.username)
 
-                message = str(await ainput("Message to send:\n>> "))
-                self.send_message(room_name, message, mtype='groupchat')
-                continue
-
-            elif option == 7:     # Change status message
-                await self.change_presence_message()
-                print("Status message changed")
-
-            elif option == 8:   # Send file
-                await self.send_file()
-
-            elif option == 9:   # Particular contact details
-                user = str(await ainput("Contact to show details\n>> "))
-                await self.show_users_and_contacts(user)
-                continue
-
-            elif option == 10:   # Exit
+            elif option == 3:   # Exit
                 self.end_session()
 
             elif option == 12344321:
                 print("Я Коло-бот")
-            elif option == 11: 
-                
-                
-                """
-                read txt file with network topology
-                """
-                fil = open("topology.txt","r")
 
-                #---------------------------------------
-                """
-                send message
-                """
-                
-                print("hello world")
-                try:
-                    username = await ainput("Username to send message to\n>> ")
-                    message_destinatary = f"{username}@alumchat.xyz"
-                    message = await ainput("Message content\n>> ")
-                    await self.message(message_destinatary, message, mtype='chat')
-                    print(f"Sent: {message} > {username}")
-                except AttributeError:
-                    print("El usuario no es correcto")
-                continue
-        
-            else:
-                print("Invalid option")
 
     async def message(self, message_destinatary, message, mtype='chat'):
         """
@@ -251,35 +248,6 @@ class MessengerAccount(ClientXMPP):
         """
         self.disconnect()
 
-    async def show_users_and_contacts(self, username=None):
-        """
-        Shows the users and contacts with their availability and statuses
-        """
-        print('Roster for %s' % self.boundjid.bare)
-        groups = self.client_roster.groups()
-        for group in groups:
-            print('\n%s' % group)
-            print('-' * 72)
-            for jid in groups[group]:
-                sub = self.client_roster[jid]['subscription']
-                name = self.client_roster[jid]['name']
-                if username is not None:
-                    if username != self.client_roster[jid]['name']:
-                        if f"{username}@alumchat.xyz" != jid:
-                            continue
-                if self.client_roster[jid]['name']:
-                    print(' %s (%s) [%s]' % (name, jid, sub))
-                else:
-                    print(' %s [%s]' % (jid, sub))
-
-                connections = self.client_roster.presence(jid)
-                for res, pres in connections.items():
-                    show = 'available'
-                    if pres['show']:
-                        show = pres['show']
-                    print('   - %s (%s)' % (res, show))
-                    if pres['status']:
-                        print('       %s' % pres['status'])
 
     def wait_for_presences(self, pres):
         """
@@ -292,15 +260,6 @@ class MessengerAccount(ClientXMPP):
         else:
             self.presences_received.clear()
 
-    async def change_presence_message(self):
-        """
-        Changes the availability, nickname, and status of a user.
-        """
-        status = str(await ainput("Insert your new availability (hint: away/dnd/chat/xa)\n>> "))
-        status_message = str(await ainput("Type your new status message\n>> "))
-        nickname = str(await ainput("Type in your new nickname\n>> "))
-
-        self.send_presence(pshow=status, pstatus=status_message, pnick=nickname)
 
     async def add_user_to_contacts(self):
         """
@@ -310,64 +269,4 @@ class MessengerAccount(ClientXMPP):
         username = str(await ainput("Username to add as a contact\n>> "))
         self.send_presence_subscription(pto=f"{username}@alumchat.xyz")
 
-    def start_conversation(self):
-        """
-        Send a message to another user
-        """
-        username = input("Username to send message to\n>> ")
-        message = input("Message content\n>> ")
-        self.send_message(f"{username}@alumchat.xyz", message, mtype='chat')
-
-    async def delete_account(self):
-        """
-        Deletes the current account.
-        """
-        resp = self.Iq()
-        resp['type'] = 'set'
-        resp['register']['remove'] = True
-
-        try:
-            await resp.send()
-            print(f"{self.boundjid}'s account has been removed")
-        except exceptions.IqError as e:
-            if e.iq['error']['code'] == '409':
-                print(f"Could not delete account: {resp['register']['username']}")
-            else:
-                print("Account could not be deleted")
-            await self.disconnect()
-        except exceptions.IqTimeout as e:
-            print("Timeout error, please try again")
-            await self.disconnect()
-
-    async def send_file(self):
-        """
-        Sends a file to another user
-        """
-        filename = str(await(ainput("Introduce the name of the file to send with extension\n>> ")))
-        recipient = str(await(ainput("Recipient's username\n>> ")))
-        recipient += "@alumchat.xyz"
-        try:
-            url = await self.plugin['xep_0363'].upload_file(
-                filename, domain='alumchat.xyz', timeout=10)
-        except exceptions.IqTimeout:
-            raise TimeoutError('Could not send message in time')
-
-        html = (
-            f'<body xmlns="http://www.w3.org/1999/xhtml">'
-            f'<a href="{url}">{url}</a></body>'
-        )
-        message = self.make_message(mto=recipient, mbody=url, mhtml=html)
-        print("Message sent")
-        message['oob']['url'] = url
-        message.send()
-
-
-my_list = "[1, 'mycar', 3, 4, 5, 6]"
-my_list = ast.literal_eval(my_list)
-my_list = [str(number) for number in my_list]
-my_list = my_list[0::]
-my_list.append(str([2,3]))
-my_list = '/$/'.join(my_list)
-
-print(my_list, "This is the list")
 

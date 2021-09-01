@@ -1,9 +1,12 @@
 class NetworkAlgorithms:
+
     def __init__(self):
         self.shortest_path = []
         self.current_path = []
         print("Initializing")
 
+    def say_hi(self, a, b, c):
+        print("HELLOO")
     def min_distance(self, dist, queue):
         # Initialize min value and min_index as -1
         minimum = float("Inf")
@@ -26,6 +29,7 @@ class NetworkAlgorithms:
     '''
 
     def link_state_routing(self, graph, destination, src=0):
+        print("got the funciton")
         self.shortest_path.clear()
         row = len(graph)
 

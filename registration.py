@@ -32,6 +32,7 @@ class Registration(ClientXMPP):
         Starts the registration bot
         :param event: event to handle
         """
+        print("session started")
         self.send_presence()
         await self.get_roster()
         await self.disconnect()

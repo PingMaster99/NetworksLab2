@@ -1,4 +1,4 @@
-
+from constants import SERVER
 class TopologyReader:
     def __init__(self):
         self.file = './topology.txt'
@@ -14,7 +14,7 @@ class TopologyReader:
             for line in top:
                 if first_line:
                     self.nodes = line.split()
-                    self.nodes = [f"{node}@alumchat.xyz" for node in self.nodes]
+                    self.nodes = [f"{node}{SERVER}" for node in self.nodes]
                     self.node_quantity = len(self.nodes)
                     first_line = False
                     continue
