@@ -23,5 +23,5 @@ Select an option to proceed:
 4 -> Send DVR weight update
 >> """
 
-SERVER = "@54.152.138.133"    # Change to @192.168.56.1 or ipv4 value if using a local server
+SERVER = "@alumchat.xyz"    # Change to @192.168.56.1 or ipv4 value if using a local server
 LOGGING = False             # Change to True if you want logging

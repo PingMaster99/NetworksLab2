@@ -58,10 +58,8 @@ class NetworkAlgorithms:
 
         # Add all vertices in queue
         queue = [i for i in range(row)]
-
         # Find shortest path for all vertices
         while queue:
-
             # Pick the minimum dist vertex from vertices that are still in the queue
             u = self.min_distance(dist, queue)
 
@@ -78,9 +76,9 @@ class NetworkAlgorithms:
                     if dist[u] + graph[u][i] < dist[i]:
                         dist[i] = dist[u] + graph[u][i]
                         parent[i] = u
-
         # populate the shortest distance path
         self.get_distance_path(dist, parent, src)
+        print("returning distance")
         return self.shortest_path[destination], dist[destination]
 
     # Populates the shortest distance path array
@@ -100,12 +98,14 @@ class NetworkAlgorithms:
     # array
     def get_distance_path(self, dist, parent, src=0):
         src = src
+        print(dist)
         print("Vertex \t\tDistance from Source\tPath")
         for i in range(1, len(dist)):
             print("\n%d --> %d \t\t%d \t\t\t\t\t" % (src, i, dist[i])),
             self.get_path(parent, i)
             self.shortest_path.append(self.current_path.copy())
             self.current_path.clear()
+        print("returning recursion")
 
     # The main function that finds shortest distances from src to
     # all other vertices using Bellman-Ford algorithm.

@@ -199,14 +199,13 @@ class MessengerAccount(ClientXMPP):
                         pass
                     elif algorithm == '2':  # Flooding
                         print(self.matrix, self.node_number, message_destinatary)
-                        routing = NetworkAlgorithms()
-                        path, distance = routing.link_state_routing(self.matrix, self.nodes.index(message_destinatary), self.node_number)
                         message = f"Sender/$/{self.jid}/$/Destinatary/$/{message_destinatary}" \
                                   f"/$/Traversed nodes/$/{self.adjacent_names}/$/Distance/$/N.A/$/Path/$/" \
                                   f"{[x for x in self.nodes if x not in self.adjacent_names]}/$/Nodes/$/{self.nodes}/$/Message/$/{message}/$/2"
 
                         for i in range(len(self.adjacent_names)):
                             await self.message(self.adjacent_names[i], message, mtype='chat')
+                        continue
 
                     elif algorithm == '3':  # Link state routing
                         print(self.matrix, self.node_number, message_destinatary)
@@ -237,7 +236,7 @@ class MessengerAccount(ClientXMPP):
                     message = f"Sender/$/{self.jid}/$/Destinatary/$/{node}" \
                               f"/$/Traversed nodes/$/hi/$/Distance/$/EmptyPayload/$/Path/$/" \
                               f"hi/$/Nodes/$/{self.nodes}/$/Message/$/{self.adjacent_node_weights}/$/3 "
-
+                    await self.message(node, message, mtype='chat')
             elif option == 12344321:
                 print("Я Коло-бот")
 
