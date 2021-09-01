@@ -1,8 +1,8 @@
 """
     constants.py
-    Author: Pablo Ruiz 18259 (PingMaster99)
-    Version 1.0
-    Updated August 12, 2021
+    Authors: Mario Sarmientos, Randy Venegas, Pablo Ruiz 18259 (PingMaster99)
+    Version 2.0
+    Updated August 31, 2021
 
     Constants used for XMPP client
 """

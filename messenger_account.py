@@ -2,7 +2,7 @@
 """
     messenger_account.py
     Authors: Mario Sarmientos, Randy Venegas, Pablo Ruiz 18259 (PingMaster99)
-    Version 1.0
+    Version 2.0
     Updated August 31, 2021
 
     Client that uses XMPP protocol to communicate using network routing algorithms.
