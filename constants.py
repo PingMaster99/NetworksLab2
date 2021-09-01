@@ -20,7 +20,8 @@ Select an option to proceed:
 1 -> Log out
 2 -> Send a message
 3 -> Exit
+4 -> Send DVR weight update
 >> """
 
-SERVER = "@alumchat.xyz"    # Change to @192.168.56.1 or ipv4 value if using a local server
+SERVER = "@54.152.138.133"    # Change to @192.168.56.1 or ipv4 value if using a local server
 LOGGING = False             # Change to True if you want logging

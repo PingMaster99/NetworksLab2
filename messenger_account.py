@@ -195,7 +195,7 @@ class MessengerAccount(ClientXMPP):
                                              "routing")
                     path = None
                     if algorithm == '1':    # Distance vector routing
-
+                        # Routes and weights are updated in option number 4.
                         pass
                     elif algorithm == '2':  # Flooding
                         print(self.matrix, self.node_number, message_destinatary)
@@ -215,6 +215,7 @@ class MessengerAccount(ClientXMPP):
                         message = f"Sender/$/{self.jid}/$/Destinatary/$/{message_destinatary}" \
                                   f"/$/Traversed nodes/$/{[path[0], path[1]]}/$/Distance/$/{distance}/$/Path/$/" \
                                   f"{path[2::]}/$/Nodes/$/{self.nodes}/$/Message/$/{message}/$/3 "
+                        print("message payload:\n", message)
                         print(f"Shortest path is: {path} with a total weight of {distance}")
                     else:
                         print("Algorithm wasn't correct")
