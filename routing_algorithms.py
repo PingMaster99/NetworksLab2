@@ -136,9 +136,3 @@ class NetworkAlgorithms:
         for i in range(len(matrix)):
             print("{0}\t\t{1}".format(i, dist[i]))
 
-
-my_matrix = [[0, 2, 88], [float('inf'), 1, 2], [3, 5, 2]]
-tf = NetworkAlgorithms()
-d = tf.link_state_routing(my_matrix, 2)
-print(d)
-

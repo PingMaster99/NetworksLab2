@@ -49,8 +49,3 @@ class TopologyReader:
                     print("topology.txt contains non numeric values")
                     break
 
-
-tr = TopologyReader()
-tr.fill_file()
-print(tr.nodes)
-print(tr.adjacency_matrix)
