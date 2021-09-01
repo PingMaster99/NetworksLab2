@@ -94,9 +94,9 @@ class MessengerAccount(ClientXMPP):
                     self.dvr_min_distances = current_min_distances
                     print(f"The new minimum distances are:\n{self.dvr_min_distances}")
 
-            elif message_data[14] == 2:     # Flooding
-                message_data[5] = ast.literal_eval(message_data[5]) # visited nodes
-                message_data[9] = ast.literal_eval(message_data[9])  # path
+            elif message_data[14] == 2:                                 # Flooding
+                message_data[5] = ast.literal_eval(message_data[5])     # visited nodes
+                message_data[9] = ast.literal_eval(message_data[9])     # path
                 not_sent_to = [x for x in self.adjacent_names not in message_data[5]]
 
                 if len(not_sent_to) > 0 and message_data[3] in message_data[9]:
@@ -114,7 +114,7 @@ class MessengerAccount(ClientXMPP):
 
                 message_data[9] = ast.literal_eval(message_data[9])
 
-            elif message_data[14] == 3: # link state routing
+            elif message_data[14] == 3:                                 # link state routing
                 print(f"Message in transit received")
                 message_data[5] = ast.literal_eval(message_data[5])     # visited_nodes
                 message_data[9] = ast.literal_eval(message_data[9])     # path
