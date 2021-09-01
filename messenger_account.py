@@ -1,11 +1,11 @@
 # encoding: utf-8
 """
     messenger_account.py
-    Author: Pablo Ruiz 18259 (PingMaster99)
+    Authors: Mario Sarmientos, Randy Venegas, Pablo Ruiz 18259 (PingMaster99)
     Version 1.0
-    Updated August 12, 2021
+    Updated August 31, 2021
 
-    Client that uses XMPP protocol to communicate.
+    Client that uses XMPP protocol to communicate using network routing algorithms.
     Base reference for slixmpp implementations: https://lab.louiz.org/poezio/slixmpp/-/tree/master/examples
 """
 
@@ -54,6 +54,7 @@ class MessengerAccount(ClientXMPP):
         self.adjacent_node_weights = self.matrix[self.node_number]
         self.adjacent_names = []
         self.dvr_matrix = []
+        self.dvr_min_distances = []
 
         for i in range(len(self.nodes)):
             self.dvr_matrix.append([0] * len(self.nodes))
@@ -86,8 +87,12 @@ class MessengerAccount(ClientXMPP):
                 print(f"Message received from {message_data[1]}: {message_data[13]}")
 
             elif message_data[14] == 1:     # DVR
-                pass
-
+                routing = NetworkAlgorithms()
+                self.dvr_matrix[self.nodes.index(message_data[1])] = ast.literal_eval(message_data[13])
+                current_min_distances = routing.bellman_ford(self.dvr_matrix, self.node_number)
+                if current_min_distances != self.dvr_min_distances:
+                    self.dvr_min_distances = current_min_distances
+                    print(f"The new minimum distances are:\n{self.dvr_min_distances}")
 
             elif message_data[14] == 2:     # Flooding
                 message_data[5] = ast.literal_eval(message_data[5]) # visited nodes
@@ -189,12 +194,12 @@ class MessengerAccount(ClientXMPP):
                     algorithm = await ainput("Algorithm: \n1. Flooding\n2. Distance vector routing\n3. Link state "
                                              "routing")
                     path = None
-                    if algorithm == '1':    # Flooding
+                    if algorithm == '1':    # Distance vector routing
+
                         pass
-                    elif algorithm == '2':  # Distance vector routing
+                    elif algorithm == '2':  # Flooding
                         print(self.matrix, self.node_number, message_destinatary)
                         routing = NetworkAlgorithms()
-                        routing.say_hi(self.matrix, self.nodes.index(message_destinatary), self.node_number)
                         path, distance = routing.link_state_routing(self.matrix, self.nodes.index(message_destinatary), self.node_number)
                         message = f"Sender/$/{self.jid}/$/Destinatary/$/{message_destinatary}" \
                                   f"/$/Traversed nodes/$/{self.adjacent_names}/$/Distance/$/N.A/$/Path/$/" \
@@ -206,7 +211,6 @@ class MessengerAccount(ClientXMPP):
                     elif algorithm == '3':  # Link state routing
                         print(self.matrix, self.node_number, message_destinatary)
                         routing = NetworkAlgorithms()
-                        routing.say_hi(self.matrix, self.nodes.index(message_destinatary), self.node_number)
                         path, distance = routing.link_state_routing(self.matrix, self.nodes.index(message_destinatary), self.node_number)
                         message = f"Sender/$/{self.jid}/$/Destinatary/$/{message_destinatary}" \
                                   f"/$/Traversed nodes/$/{[path[0], path[1]]}/$/Distance/$/{distance}/$/Path/$/" \
@@ -227,9 +231,14 @@ class MessengerAccount(ClientXMPP):
             elif option == 3:   # Exit
                 self.end_session()
 
+            elif option == 4:   # Send dvr
+                for node in self.adjacent_names:
+                    message = f"Sender/$/{self.jid}/$/Destinatary/$/{node}" \
+                              f"/$/Traversed nodes/$/hi/$/Distance/$/EmptyPayload/$/Path/$/" \
+                              f"hi/$/Nodes/$/{self.nodes}/$/Message/$/{self.adjacent_node_weights}/$/3 "
+
             elif option == 12344321:
                 print("Я Коло-бот")
-
 
     async def message(self, message_destinatary, message, mtype='chat'):
         """
@@ -248,7 +257,6 @@ class MessengerAccount(ClientXMPP):
         """
         self.disconnect()
 
-
     def wait_for_presences(self, pres):
         """
         Tracks how many roster entries have received presence updates.
@@ -260,7 +268,6 @@ class MessengerAccount(ClientXMPP):
         else:
             self.presences_received.clear()
 
-
     async def add_user_to_contacts(self):
         """
         Adds another user to the current user's contacts.
@@ -268,5 +275,3 @@ class MessengerAccount(ClientXMPP):
         """
         username = str(await ainput("Username to add as a contact\n>> "))
         self.send_presence_subscription(pto=f"{username}@alumchat.xyz")
-
-

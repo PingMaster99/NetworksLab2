@@ -1,4 +1,16 @@
-import numpy as np
+# encoding: utf-8
+"""
+    messenger_account.py
+    Authors: Mario Sarmientos, Randy Venegas, Pablo Ruiz 18259 (PingMaster99)
+    Version 1.0
+    Updated August 31, 2021
+
+    Client that uses XMPP protocol to communicate using network routing algorithms.
+    Base reference for link state routing:
+    https://www.geeksforgeeks.org/printing-paths-dijkstras-shortest-path-algorithm/
+"""
+
+
 class NetworkAlgorithms:
 
     def __init__(self):
@@ -6,8 +18,6 @@ class NetworkAlgorithms:
         self.current_path = []
         print("Initializing")
 
-    def say_hi(self, a, b, c):
-        print("HELLOO")
     def min_distance(self, dist, queue):
         # Initialize min value and min_index as -1
         minimum = float("Inf")
@@ -21,15 +31,17 @@ class NetworkAlgorithms:
                 min_index = i
         return min_index
 
-
-
-    '''Function that implements Dijkstra's single source shortest path
-    algorithm for a graph represented using adjacency matrix
-    representation
-    Reference: https://www.geeksforgeeks.org/printing-paths-dijkstras-shortest-path-algorithm/
-    '''
-
     def link_state_routing(self, graph, destination, src=0):
+        """
+        Function that implements Dijkstra's single source shortest path
+        algorithm for a graph represented using adjacency matrix
+        representation
+
+        :param graph: adjacency matrix
+        :param destination: destination node
+        :param src: source node
+        :return: path and distance
+        """
         print("got the funciton")
         self.shortest_path.clear()
         row = len(graph)
@@ -95,10 +107,34 @@ class NetworkAlgorithms:
             self.shortest_path.append(self.current_path.copy())
             self.current_path.clear()
 
+    # The main function that finds shortest distances from src to
+    # all other vertices using Bellman-Ford algorithm.
+    def bellman_ford(self, matrix, src):
+        matrix_size = len(matrix)
+        # Step 1: Initialize distances from src to all other vertices
+        # as INFINITE
+        dist = [float("Inf")] * matrix_size
+        dist[src] = 0
 
+        # Step 2: Relax all edges |V| - 1 times. A simple shortest
+        # path from src to any other vertex can have at-most |V| - 1
+        # edges
+        for _ in range(matrix_size - 1):
+            # Update dist value and parent index of the adjacent vertices of
+            # the picked vertex. Consider only those vertices which are still in
+            # queue
+            for row in matrix:
+                for column in matrix:
+                    if dist[row] != float("Inf") and dist[row] + matrix[row][column] < dist[column]:
+                        dist[column] = dist[row] + matrix[row][column]
 
-    def distance_vector(self):
-        print()
+        # print all distance
+        self.printArr(dist, matrix)
+
+    def printArr(self, dist, matrix):
+        print("Vertex Distance from Source")
+        for i in range(len(matrix)):
+            print("{0}\t\t{1}".format(i, dist[i]))
 
 
 my_matrix = [[0, 2, 88], [float('inf'), 1, 2], [3, 5, 2]]
