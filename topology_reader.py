@@ -1,4 +1,16 @@
+# encoding: utf-8
+"""
+    messenger_account.py
+    Authors: Mario Sarmientos, Randy Venegas, Pablo Ruiz 18259 (PingMaster99)
+    Version 1.0
+    Updated August 31, 2021
+
+    Reads a txt file to form a network topology
+"""
+
 from constants import SERVER
+
+
 class TopologyReader:
     def __init__(self):
         self.file = './topology.txt'
