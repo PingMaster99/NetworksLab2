@@ -191,7 +191,8 @@ class MessengerAccount(ClientXMPP):
                     username = await ainput("Username to send message to\n>> ")
                     message_destinatary = f"{username}{constants.SERVER}"
                     message = await ainput("Message content\n>> ")
-                    algorithm = await ainput("Algorithm: \n1. Flooding\n2. Distance vector routing\n3. Link state "
+                    algorithm = await ainput("Algorithm: \n1. DVR (use option 4 of general menu)"
+                                             "\n2. Flooding\n3. Link state routing\n>>"
                                              "routing")
                     path = None
                     if algorithm == '1':    # Distance vector routing
